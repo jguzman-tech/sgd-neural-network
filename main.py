@@ -23,7 +23,19 @@ matplotlib.rc('font', size=24)
 from gradient import Gradient, GradientDescent, MeanLogisticLoss
 
 def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain):
-    pass
+    X_subtrain = np.array([[]])
+    # V_mat contains all of the small w values for each hidden unite, layer 1
+    # w_vec contains all of the small w values for y_hat, layer 2
+    V_mat = stats.zscore(np.random.random_sample(X_subtrain.shape[1], n_hidden_units)) / 10
+    w_vec = stats.zscore(np.random.random_sample(X_subtrain.shape[1])) / 10
+    for i in range(is_subtrain.shape[0]):
+        if(is_subtrain[i] == True):
+            X_train.append(np.copy(X_mat[i]))
+    for epoch in range(max_epochs):
+        for row in range(X_subtrain.shape[0]):
+            w_vec = Forward_Propagation(V_mat)
+            w_vec = Back_Propagation(X_subtrain[row], h_vec, V_mat)
+    return V_mat, w_vec
 
 def Parse(fname):
     all_rows = []

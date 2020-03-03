@@ -93,6 +93,19 @@ X = temp_ar[:, 0:-1] # m x n
 X = X.astype(float)
 y = np.array([temp_ar[:, -1]]).T 
 y = y.astype(int)
+num_row = X.shape[0]
+
+#Next create a variable is.train (logical vector with size equal to the number of observations in the whole data set). 
+is_train =  np.random.shuffle(np.repeat(("TRUE", "FALSE"), [num_row * 0.8, num_row * 0.2], axis = 0))
+
+#Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set). 
+num_train = num_row * 0.8
+is_subtrain = np.random.shuffle(np.repeat(("TRUE", "FALSE"), [num_train * 0.6, num_train * 0.4], axis = 0))
+
+# get train data
 
 
-print(NNetOneSplit(
+
+
+
+

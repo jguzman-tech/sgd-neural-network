@@ -26,8 +26,13 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     X_subtrain = np.array([[]])
     # V_mat contains all of the small w values for each hidden unite, layer 1
     # w_vec contains all of the small w values for y_hat, layer 2
-    V_mat = stats.zscore(np.random.random_sample(X_subtrain.shape[1], n_hidden_units)) / 10
-    w_vec = stats.zscore(np.random.random_sample(X_subtrain.shape[1])) / 10
+
+    # m x n_hidden_units matrix
+    V_mat = stats.zscore(np.random.random_sample(X_subtrain.shape[1], n_hidden_units))
+    # 
+    w_vec = stats.zscore(np.random.random_sample(X_subtrain.shape[1]))
+    h_vec = stats.zscore(np.random.random_sample(n_hidden_units))
+    
     for i in range(is_subtrain.shape[0]):
         if(is_subtrain[i] == True):
             X_train.append(np.copy(X_mat[i]))
@@ -36,6 +41,17 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
             w_vec = Forward_Propagation(V_mat)
             w_vec = Back_Propagation(X_subtrain[row], h_vec, V_mat)
     return V_mat, w_vec
+
+def Back_Propagation(data_point, h_vec, V_mat):
+    h_vec = grad_a
+    for l in range(2):
+        if(l == 1):
+            grad_a[l] = 
+        else:
+            grad_h[l] = grad_a[l] * h[l] * (1 - h[l])
+            grad_a[l] = np.matmul(grad_a[l], h[l - 1].T)
+    return grad_w
+            
 
 def Parse(fname):
     all_rows = []
@@ -49,6 +65,7 @@ def Parse(fname):
         std = np.std(temp_ar[:, col])
         if(std == 0):
             print("col " + str(col) + " has an std of 0")
+        temp_ar[:, col] = stats.zscore(temp_ar[:, col])
     return temp_ar
 
 if len(sys.argv) < 4:

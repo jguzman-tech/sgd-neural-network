@@ -136,16 +136,17 @@ y = y.astype(int)
 num_row = X.shape[0]
 
 #Next create a variable is.train (logical vector with size equal to the number of observations in the whole data set). 
-is_train =  np.random.shuffle(np.repeat(("TRUE", "FALSE"), [num_row * 0.8, num_row * 0.2], axis = 0))
+is_train = np.random.randint(0, 5, X.shape[0]) # 80% train, 20% test (from whole dataset)
+is_train = (is_train < 4) # convert to boolean
 
-#Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set). 
-num_train = num_row * 0.8
-is_subtrain = np.random.shuffle(np.repeat(("TRUE", "FALSE"), [num_train * 0.6, num_train * 0.4], axis = 0))
+#Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set).
+is_subtrain = np.random.randint(0, 5, is_train[is_train == True].shape[0]) # 60% subtrain, 40% validation (from training set)
+is_subtrain = (is_subtrain < 3) # convert to boolean
 
-# get train data
+# get training set
+X_mat = X[np.where(is_train)[0]]
+y_vec = y[np.where(is_train)[0]]
 
-
-
-
-
-
+# NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
+# import pdb; pdb.set_trace()
+V_mat, w_vec = NNetOneSplit(X_mat, y_vec, 10, 0.1, 10, is_subtrain)

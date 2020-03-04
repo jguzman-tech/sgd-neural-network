@@ -24,40 +24,80 @@ from gradient import Gradient, GradientDescent, MeanLogisticLoss
 
 def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain):
     X_subtrain = np.array([[]])
+    X_validation = np.array([[]])
     n_col = X_mat.shape[1]
     # V_mat contains all of the small w values for each hidden unite, layer 1
     # w_vec contains all of the small w values for y_hat, layer 2
     V_mat = stats.zscore(np.random.random_sample(n_col, n_hidden_units)) / 10
     w_vec = stats.zscore(np.random.random_sample(n_col)) / 10
-    # create a weight  list and put two weight in this list
-    weight_list = list();
-    weight_list.append(V_mat);
-    weight_list.append(w_vec);
+    
     for i in range(is_subtrain.shape[0]):
-        if(is_subtrain[i] == True):
-            X_train.append(np.copy(X_mat[i]))
+        if(is_subtrain[i] == "TRUE"):
+            X_subtrain.append(np.copy(X_mat[i]))
+        if(is_subtrain[i] == "FALSE"):
+            X_validation.append(np.copy(X_mat[i]))
+
+    # the loss value
+    loss_value = list()
+    # epoch part
     for epoch in range(max_epochs):
+        # list of weight_list for each row
+        weight_list_X = list()
         for row in range(X_subtrain.shape[0]):
+            # create a weight  list and put two weight in this list
+            weight_list = list()
+            weight_list.append(V_mat)
+            weight_list.append(w_vec)
             # forward propagation
             observation = X_subtrain[row]
             h_list = ForwardPropagation(observation, weight_list)
-    
-    return h_list
+            # back propagation
+            grad_w_list = Back_Propagation(h_list, weight_list)
+            # update the theta for each weight
+            for i in range(len(weight_list))
+                weight_list[i] = weight_list[i] - step_size * grad_w_list[i]
+            weight_list_X.append(weight_list)
+
+        ## compute the logistic loss for subtrain and validaiton
+        # get prediction for subtrain and validaiton
+        
+        
+
+    #return h_list
     #return V_mat, w_vec
+
+# logistic loss function
+def LogisticLoss(pred, label)
+    value = log(1 + exp(-label * pred)
+    return value
 
 # forward propagation function
 def ForwardPropagation(X, weight_list)
     h_list = list()
-    h_list.append(X)
+    h_list.append(X)# is it the correct way to append a numpy array into a list? or use np.copy(X)
     for i in range(len(weight_list))
         a_vec = np.matmul(X, weight_list[i])
         if(i == len(weight_list))
-            h_list.append(a_vec)
+            h_list.append(a_vec)# is it the correct way to append a numpy array into a list?
         else
             h_vec = 1/(1+exp(-a_vec))
-            h_list.append(h_vec)
+            h_list.append(h_vec)# is it the correct way to append a numpy array into a list?
 
     return h_list
+
+# back progration function
+def Back_Propagation(h_list, w_list):
+    grad_w_list = list()
+    for l in range(2, 1):
+        if(l == 2):
+            grad_a = -1 * y_tilde / (1 + exp(np.matmul(h_list[l])))
+        else:
+            grad_h = np.matmul(w_list[l].T, grad_a)
+            grad_a = grad_h * h_list[l] * (1 - h_list[l])
+        grad_w = np.matmul(grad_a[l], h_list[l - 1].T)
+        grad_w_list.append(grad_w)# is it the correct way to append a numpy array into a list?
+
+    return grad_w_list
 
 def Parse(fname):
     all_rows = []

@@ -59,6 +59,16 @@ def ForwardPropagation(X, weight_list)
 
     return h_list
 
+def Back_Propagation(data_point, grad_a, grad_w, h_list):
+    for l in range(2, 0, -1):
+        if(l == 2):
+            grad_a[l] = -1 * y_tilde / (1 + exp(np.matmul(h_list[l + 1])))
+        else:
+            grad_h = np.matmul(w_list[l].T, grad_a[l + 1])
+            grad_a[l] = grad_h * h_list[l + 1] * (1 - h_list[l + 1])
+        grad_w[l - 1] = np.matmul(grad_a[l], h_list[l - 1].T)
+    return grad_w
+
 def Parse(fname):
     all_rows = []
     with open(fname) as fp:

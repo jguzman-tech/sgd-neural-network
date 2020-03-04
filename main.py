@@ -26,12 +26,14 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     n_col = X_mat.shape[1]
     # V_mat contains all of the small w values for each hidden unite, layer 1
     # w_vec contains all of the small w values for y_hat, layer 2
-    V_mat = stats.zscore(np.random.random_sample(n_col, n_hidden_units)) / 10
-    w_vec = stats.zscore(np.random.random_sample(n_col)) / 10
+    V_mat = stats.zscore(np.random.random_sample((n_col, n_hidden_units)))
+    w_vec = stats.zscore(np.random.random_sample(n_col))
     # create a weight  list and put two weight in this list
-    weight_list = list();
-    weight_list.append(V_mat);
-    weight_list.append(w_vec);
+    weight_list = list()
+    weight_list.append(V_mat)
+    weight_list.append(w_vec)
+
+    h_list = None
     for i in range(is_subtrain.shape[0]):
         if(is_subtrain[i] == True):
             X_train.append(np.copy(X_mat[i]))
@@ -79,10 +81,8 @@ def Parse(fname):
     temp_ar = np.array(all_rows, dtype=float)
     temp_ar = temp_ar.astype(float)
     for col in range(temp_ar.shape[1] - 1): # for all but last column (output)
-        std = np.std(temp_ar[:, col])
-        if(std == 0):
-            print("col " + str(col) + " has an std of 0")
-        temp_ar[:, col] = stats.zscore(temp_ar[:, col])
+        temp_ar[:, col] = stats.zscore(temp_ar[:, col]) # normalize
+    np.random.shuffle(temp_ar)
     return temp_ar
 
 if len(sys.argv) < 4:
@@ -107,10 +107,17 @@ y = y.astype(int)
 num_row = X.shape[0]
 
 #Next create a variable is.train (logical vector with size equal to the number of observations in the whole data set). 
-is_train =  np.random.shuffle(np.repeat(("TRUE", "FALSE"), [num_row * 0.8, num_row * 0.2], axis = 0))
+is_train = np.random.randint(0, 5, X.shape[0]) # 80% train, 20% test (from whole dataset)
+is_train = (is_train < 4) # convert to boolean
 
-#Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set). 
-num_train = num_row * 0.8
-is_subtrain = np.random.shuffle(np.repeat(("TRUE", "FALSE"), [num_train * 0.6, num_train * 0.4], axis = 0))
+#Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set).
+is_subtrain = np.random.randint(0, 5, is_train.shape[0]) # 60% subtrain, 40% validation (from training set)
+is_subtrain = (is_train < 3) # convert to boolean
 
-# get train data
+# get training set
+X_mat = X[np.where(is_train)[0]]
+y_vec = y[np.where(is_train)[0]]
+
+
+# NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
+NNetOneSplit(X_mat, y_vec, 10, 0.1, 10, is_subtrain)

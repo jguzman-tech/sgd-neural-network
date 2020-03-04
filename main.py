@@ -58,7 +58,7 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
                 weight_list[i] = weight_list[i] - step_size * grad_w_list[i]
             weight_list_X.append(weight_list)
 
-        ## compute the logistic loss for subtrain and validaiton
+        ## compute the logistic loss for subtraihttps://forum.handsontable.com/t/adding-dictionary-map-array-as-data/4199/3n and validaiton
         # get prediction for subtrain and validaiton
         
         

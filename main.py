@@ -20,7 +20,6 @@ warnings.simplefilter('error') # treat warnings as errors
 from matplotlib.pyplot import figure
 figure(num=None, figsize=(30, 8), dpi=80, facecolor='w', edgecolor='k')
 matplotlib.rc('font', size=24)
-from gradient import Gradient, GradientDescent, MeanLogisticLoss
 
 def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain):
     X_subtrain = np.array([[]])
@@ -46,25 +45,27 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     #return V_mat, w_vec
 
 # forward propagation function
-def ForwardPropagation(X, weight_list)
+def ForwardPropagation(X, weight_list):
     h_list = list()
     h_list.append(X)
-    for i in range(len(weight_list))
+    for i in range(len(weight_list)):
         a_vec = np.matmul(X, weight_list[i])
-        if(i == len(weight_list))
+        if(i == len(weight_list)):
             h_list.append(a_vec)
-        else
+        else:
             h_vec = 1/(1+exp(-a_vec))
             h_list.append(h_vec)
 
     return h_list
 
-def Back_Propagation(data_point, grad_a, grad_w, h_list):
+def BackPropagation(data_point, grad_w, h_list):
+    grad_a = np.array([[], [], []]) # 3 rows
+    grad_h = np.array([[], [], []]) # 3 rows
     for l in range(2, 0, -1):
         if(l == 2):
             grad_a[l] = -1 * y_tilde / (1 + exp(np.matmul(h_list[l + 1])))
         else:
-            grad_h = np.matmul(w_list[l].T, grad_a[l + 1])
+            grad_h[l] = np.matmul(w_list[l].T, grad_a[l + 1])
             grad_a[l] = grad_h * h_list[l + 1] * (1 - h_list[l + 1])
         grad_w[l - 1] = np.matmul(grad_a[l], h_list[l - 1].T)
     return grad_w
@@ -81,7 +82,7 @@ def Parse(fname):
         std = np.std(temp_ar[:, col])
         if(std == 0):
             print("col " + str(col) + " has an std of 0")
-        temp_ar[:, col] = stats.zscore(temp_ar[:, col])`
+        temp_ar[:, col] = stats.zscore(temp_ar[:, col])
     return temp_ar
 
 if len(sys.argv) < 4:
@@ -113,9 +114,3 @@ num_train = num_row * 0.8
 is_subtrain = np.random.shuffle(np.repeat(("TRUE", "FALSE"), [num_train * 0.6, num_train * 0.4], axis = 0))
 
 # get train data
-
-
-
-
-
-

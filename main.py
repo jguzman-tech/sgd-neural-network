@@ -22,7 +22,12 @@ figure(num=None, figsize=(30, 8), dpi=80, facecolor='w', edgecolor='k')
 matplotlib.rc('font', size=24)
 
 def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain):
-    X_subtrain = np.array([[]])
+    X_subtrain = X_mat[np.where(is_subtrain == True)[0]]
+    y_subtrain = y_vec[np.where(is_subtrain == True)[0]]
+    
+    X_validation = X_mat[np.where(is_subtrain == False)[0]]
+    y_validation = y_vec[np.where(is_subtrain == False)[0]]
+    
     n_col = X_mat.shape[1]
     # V_mat contains all of the small w values for each hidden unite, layer 1
     # w_vec contains all of the small w values for y_hat, layer 2
@@ -33,18 +38,19 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     weight_list.append(V_mat)
     weight_list.append(w_vec)
 
+    y_tilde = np.copy(y_vec)
+    y_tilde[y_tilde == 0] = -1
+
     h_list = None
-    for i in range(is_subtrain.shape[0]):
-        if(is_subtrain[i] == True):
-            X_train.append(np.copy(X_mat[i]))
+    grad_w = None
     for epoch in range(max_epochs):
         for row in range(X_subtrain.shape[0]):
             # forward propagation
             observation = X_subtrain[row]
+            output = y_tilde[row]
             h_list = ForwardPropagation(observation, weight_list)
-    
-    return h_list
-    #return V_mat, w_vec
+            grad_w = BackPropagation(observation, grad_w, h_list, output)
+    return V_mat, w_vec
 
 # forward propagation function
 def ForwardPropagation(X, weight_list):
@@ -55,20 +61,22 @@ def ForwardPropagation(X, weight_list):
         if(i == len(weight_list)):
             h_list.append(a_vec)
         else:
-            h_vec = 1/(1+exp(-a_vec))
+            h_vec = 1/(1+np.exp(-a_vec))
             h_list.append(h_vec)
 
     return h_list
 
-def BackPropagation(data_point, grad_w, h_list):
+# should y_tilde be the whole vector or just one element?
+def BackPropagation(data_point, grad_w, h_list, y_tilde):
     grad_a = np.array([[], [], []]) # 3 rows
     grad_h = np.array([[], [], []]) # 3 rows
     for l in range(2, 0, -1):
+        import pdb; pdb.set_trace()
         if(l == 2):
-            grad_a[l] = -1 * y_tilde / (1 + exp(np.matmul(h_list[l + 1])))
+            grad_a[l] = -1 * y_tilde / (1 + np.exp(np.matmul(y_tilde, h_list[l])))
         else:
             grad_h[l] = np.matmul(w_list[l].T, grad_a[l + 1])
-            grad_a[l] = grad_h * h_list[l + 1] * (1 - h_list[l + 1])
+            grad_a[l] = grad_h * h_list[l + 1] * (1 - h_list[l])
         grad_w[l - 1] = np.matmul(grad_a[l], h_list[l - 1].T)
     return grad_w
 
@@ -111,13 +119,14 @@ is_train = np.random.randint(0, 5, X.shape[0]) # 80% train, 20% test (from whole
 is_train = (is_train < 4) # convert to boolean
 
 #Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set).
-is_subtrain = np.random.randint(0, 5, is_train.shape[0]) # 60% subtrain, 40% validation (from training set)
-is_subtrain = (is_train < 3) # convert to boolean
+is_subtrain = np.random.randint(0, 5, is_train[is_train == True].shape[0]) # 60% subtrain, 40% validation (from training set)
+is_subtrain = (is_subtrain < 3) # convert to boolean
 
 # get training set
 X_mat = X[np.where(is_train)[0]]
 y_vec = y[np.where(is_train)[0]]
 
-
 # NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
-NNetOneSplit(X_mat, y_vec, 10, 0.1, 10, is_subtrain)
+# import pdb; pdb.set_trace()
+V_mat, w_vec = NNetOneSplit(X_mat, y_vec, 10, 0.1, 10, is_subtrain)
+

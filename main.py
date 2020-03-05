@@ -162,5 +162,7 @@ mll_subtrain, mll_validation, V_mat, w_vec = NNetOneSplit(X_mat, y_vec, max_epoc
 
 plt.plot(mll_subtrain, label='subtrain')
 plt.plot(mll_validation, label='validation')
+optimal_epoch = mll_validation.index(min(mll_validation))
+plt.scatter(optimal_epoch, min(mll_validation), marker='o', edgecolors='r', s=160, facecolor='none', linewidth=3, label='minimum')
 plt.legend()
 plt.savefig("logistic_loss.png")

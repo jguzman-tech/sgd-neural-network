@@ -92,8 +92,8 @@ def Back_Propagation(h_list, w_list, y_tilde):
         else:
             grad_h = w_list[i][np.newaxis].T * grad_a
             grad_a = grad_h * h_list[i] * (1 - h_list[i])
-    grad_w = np.matmul(h_list[i - 1].T, grad_a)
-    
+        grad_w_list.append(np.matmul(h_list[i - 1].T, grad_a)[np.newaxis].T)
+    grad_w_list.reverse()
     return grad_w_list
 
 def Parse(fname):

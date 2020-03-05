@@ -41,13 +41,8 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
 
     y_tilde_validation = np.copy(y_validation)
     y_tilde_validation[y_tilde_validation == 0] = -1
-    
-    mll_subtrain = list()
-    mll_validation = list()
 
-    # the loss value
-    loss_value = list()
-    # epoch part
+    loss_values = {'subtrain': list(), 'validation': list()}
 
     weight_list = list()
     weight_list.append(None)
@@ -55,27 +50,18 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     weight_list.append(w_vec)
     
     for epoch in range(max_epochs):
-        
-        # list of weight_list for each row
-        weight_list_X = list()
         for row in range(X_subtrain.shape[0]):
-            # create a weight  list and put two weight in this list
-            # only layer numbers 1 and 2 are valid
-            
-            # forward propagation
             observation = X_subtrain[row]
             h_list = ForwardPropagation(observation, weight_list)
-            # back propagation
-            grad_w_list = Back_Propagation(h_list, weight_list, y_tilde_subtrain[row])
-            # update the theta for each weight
+            grad_w_list = BackPropagation(h_list, weight_list, y_tilde_subtrain[row])
+            # update weight
             for i in range(1, 3):
                 weight_list[i] = weight_list[i] - step_size * grad_w_list[i]
-            weight_list_X.append(weight_list)
-        mll_subtrain.append(MeanLogisticLoss(weight_list[1], weight_list[2], X_subtrain, y_tilde_subtrain))
-        mll_validation.append(MeanLogisticLoss(weight_list[1], weight_list[2], X_validation, y_tilde_validation))
-    return mll_subtrain, mll_validation, V_mat, w_vec
 
-# logistic loss function
+        loss_values['subtrain'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_subtrain, y_tilde_subtrain))
+        loss_values['validation'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_validation, y_tilde_validation))
+    return loss_values, mll_validation, V_mat, w_vec
+
 def MeanLogisticLoss(theta1, theta2, X, y_tilde):
     my_sum = 0.0
     n = X.shape[0]
@@ -94,7 +80,7 @@ def ForwardPropagation(X, weight_list):
     return h_list
 
 # back progration function
-def Back_Propagation(h_list, w_list, y_tilde):
+def BackPropagation(h_list, w_list, y_tilde):
     grad_w_list = [None, None, None]
     for i in range(2, 0, -1):
         if(i == 2):
@@ -158,11 +144,18 @@ X_mat = X[np.where(is_train)[0]]
 y_vec = y[np.where(is_train)[0]]
 
 # NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
-mll_subtrain, mll_validation, V_mat, w_vec = NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
+loss_values, V_mat, w_vec = NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
+mll_subtrain = loss_values['subtrain']
+mll_validation = loss_values['validation']
 
-plt.plot(mll_subtrain, label='subtrain')
-plt.plot(mll_validation, label='validation')
+plt.plot(mll_subtrain, label='subtrain', color='blue')
+plt.plot(mll_validation, label='validation', color='red')
 optimal_epoch = mll_validation.index(min(mll_validation))
 plt.scatter(optimal_epoch, min(mll_validation), marker='o', edgecolors='r', s=160, facecolor='none', linewidth=3, label='minimum')
 plt.legend()
-plt.savefig("logistic_loss.png")
+plt.tight_layout()
+plt.xlabel('epoch #')
+plt.ylabel('Mean Logistic Loss')
+info = f"epochs_{max_epochs}_step_{step_size}_units_{n_hidden_units}_seed_{seed}"
+fname = f"{info}_logistic_loss.png"
+plt.savefig(fname)

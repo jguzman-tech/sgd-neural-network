@@ -93,8 +93,7 @@ def Back_Propagation(h_list, w_list, y_tilde):
             grad_a = -1 * y_tilde / (1 + np.exp(y_tilde * h_list[i]))
         else:
             import pdb; pdb.set_trace()
-            grad_h = np.matmul(w_list[i][np.newaxis], grad_a)
-            import pdb; pdb.set_trace()
+            grad_h = np.matmul(w_list[i].T, grad_a)
             grad_a = grad_h * h_list[i] * (1 - h_list[i])
     grad_w_list.append(np.matmul(h_list[i - 1].T, grad_a))
     

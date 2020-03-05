@@ -86,13 +86,13 @@ def ForwardPropagation(X, weight_list):
 # back progration function
 def Back_Propagation(h_list, w_list, y_tilde):
     grad_w_list = list()
-    grad_a = -1 * y_tilde / (1 + np.exp(y_tilde * h_list[2][0]))
-    grad_w_list.append(np.matmul(grad_a, h_list[1]))
-
-    grad_h = w_list[1][np.newaxis].T * grad_a
-    grad_a = grad_h * h_list[1] * (1 - h_list[1])
-    import pdb; pdb.set_trace()
-    grad_w_list.append(np.matmul(grad_a, h_list[0].T[np.newaxis]))
+    for i in range(2, 0, -1):
+        if(i == 2):
+            grad_a = -1 * y_tilde / (1 + np.exp(y_tilde * h_list[i]))
+        else:
+            grad_h = w_list[i][np.newaxis].T * grad_a
+            grad_a = grad_h * h_list[i] * (1 - h_list[i])
+    grad_w = np.matmul(h_list[i - 1].T, grad_a)
     
     return grad_w_list
 

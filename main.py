@@ -33,7 +33,7 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     # V_mat contains all of the small w values for each hidden unite, layer 1
     # w_vec contains all of the small w values for y_hat, layer 2
     V_mat = stats.zscore(np.random.random_sample((n_col, n_hidden_units)))
-    w_vec = stats.zscore(np.random.random_sample(n_col))
+    w_vec = stats.zscore(np.random.random_sample(n_hidden_units))
 
     y_tilde = np.copy(y_vec)
     y_tilde[y_tilde == 0] = -1
@@ -54,11 +54,12 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
             h_list = ForwardPropagation(observation, weight_list)
             # back propagation
             grad_w_list = Back_Propagation(h_list, weight_list, y_tilde[row])
+            print(len(grad_w_list))
             # update the theta for each weight
             for i in range(len(weight_list)):
                 weight_list[i] = weight_list[i] - step_size * grad_w_list[i]
             weight_list_X.append(weight_list)
-
+        
         ## compute the logistic loss for subtraihttps://forum.handsontable.com/t/adding-dictionary-map-array-as-data/4199/3n and validaiton
         # get prediction for subtrain and validaiton
     #return h_list
@@ -73,8 +74,9 @@ def LogisticLoss(pred, label):
 def ForwardPropagation(X, weight_list):
     h_list = list()
     h_list.append(X)# is it the correct way to append a numpy array into a list? or use np.copy(X)
+    h_vec = X[np.newaxis]
     for i in range(len(weight_list)):
-        a_vec = np.matmul(X[np.newaxis], weight_list[i])
+        a_vec = np.matmul(h_vec, weight_list[i])
         if(i == len(weight_list)):
             h_list.append(a_vec)# is it the correct way to append a numpy array into a list?
         else:
@@ -90,9 +92,11 @@ def Back_Propagation(h_list, w_list, y_tilde):
         if(i == 2):
             grad_a = -1 * y_tilde / (1 + np.exp(y_tilde * h_list[i]))
         else:
-            grad_h = w_list[i][np.newaxis].T * grad_a
+            import pdb; pdb.set_trace()
+            grad_h = np.matmul(w_list[i][np.newaxis], grad_a)
+            import pdb; pdb.set_trace()
             grad_a = grad_h * h_list[i] * (1 - h_list[i])
-    grad_w = np.matmul(h_list[i - 1].T, grad_a)
+    grad_w_list.append(np.matmul(h_list[i - 1].T, grad_a))
     
     return grad_w_list
 

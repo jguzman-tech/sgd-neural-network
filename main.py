@@ -1,5 +1,6 @@
 # This Python file uses the following encoding: iso-8859-1
 
+import pdb
 import os, sys
 import numpy as np
 import sklearn
@@ -33,8 +34,9 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     # V_mat contains all of the small w values for each hidden unite, layer 1
     # w_vec contains all of the small w values for y_hat, layer 2
     V_mat = stats.zscore(np.random.random_sample((n_col, n_hidden_units)))
-    w_vec = stats.zscore(np.random.random_sample(n_hidden_units))
+    w_vec = stats.zscore(np.random.random_sample(n_hidden_units))[np.newaxis]
 
+    pdb.set_trace()
     y_tilde = np.copy(y_vec)
     y_tilde[y_tilde == 0] = -1
 
@@ -92,7 +94,6 @@ def Back_Propagation(h_list, w_list, y_tilde):
         if(i == 2):
             grad_a = -1 * y_tilde / (1 + np.exp(y_tilde * h_list[i]))
         else:
-            import pdb; pdb.set_trace()
             grad_h = np.matmul(w_list[i].T, grad_a)
             grad_a = grad_h * h_list[i] * (1 - h_list[i])
     grad_w_list.append(np.matmul(h_list[i - 1].T, grad_a))

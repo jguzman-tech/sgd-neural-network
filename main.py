@@ -34,72 +34,76 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     # V_mat contains all of the small w values for each hidden unite, layer 1
     # w_vec contains all of the small w values for y_hat, layer 2
     V_mat = stats.zscore(np.random.random_sample((n_col, n_hidden_units)))
-    w_vec = stats.zscore(np.random.random_sample((n_hidden_units, 1)))
+    w_vec = stats.zscore(np.random.random_sample(n_hidden_units))[np.newaxis].T
 
-    y_tilde = np.copy(y_vec)
-    y_tilde[y_tilde == 0] = -1
+    y_tilde_subtrain = np.copy(y_subtrain)
+    y_tilde_subtrain[y_tilde_subtrain == 0] = -1
+
+    y_tilde_validation = np.copy(y_validation)
+    y_tilde_validation[y_tilde_validation == 0] = -1
+    
+    mll_subtrain = list()
+    mll_validation = list()
 
     # the loss value
     loss_value = list()
     # epoch part
+
+    weight_list = list()
+    weight_list.append(None)
+    weight_list.append(V_mat)
+    weight_list.append(w_vec)
+    
     for epoch in range(max_epochs):
+        
         # list of weight_list for each row
         weight_list_X = list()
         for row in range(X_subtrain.shape[0]):
             # create a weight  list and put two weight in this list
-            weight_list = list()
-            weight_list.append(V_mat)
-            weight_list.append(w_vec)
+            # only layer numbers 1 and 2 are valid
+            
             # forward propagation
             observation = X_subtrain[row]
             h_list = ForwardPropagation(observation, weight_list)
             # back propagation
-            
-            grad_w_list = Back_Propagation(h_list, weight_list, y_tilde[row])
-            
+            grad_w_list = Back_Propagation(h_list, weight_list, y_tilde_subtrain[row])
             # update the theta for each weight
-            for i in range(len(weight_list)):
-                weight_list[i] = weight_list[i] - step_size * grad_w_list[ 1 - i]
-            print(weight_list)
+            for i in range(1, 3):
+                weight_list[i] = weight_list[i] - step_size * grad_w_list[i]
             weight_list_X.append(weight_list)
-        
-        ## compute the logistic loss for subtraihttps://forum.handsontable.com/t/adding-dictionary-map-array-as-data/4199/3n and validaiton
-        # get prediction for subtrain and validaiton
-    #return h_list
-    return V_mat, w_vec
+        mll_subtrain.append(MeanLogisticLoss(weight_list[1], weight_list[2], X_subtrain, y_tilde_subtrain))
+        mll_validation.append(MeanLogisticLoss(weight_list[1], weight_list[2], X_validation, y_tilde_validation))
+    return mll_subtrain, mll_validation, V_mat, w_vec
 
 # logistic loss function
-def LogisticLoss(pred, label):
-    value = np.log(1 + np.exp(-label * pred))
-    return value
+def MeanLogisticLoss(theta1, theta2, X, y_tilde):
+    my_sum = 0.0
+    n = X.shape[0]
+    for row in range(n):
+        my_sum += np.log(1 + np.exp(-1 * y_tilde[row, 0] * np.matmul(np.matmul(X[row][np.newaxis], theta1), theta2)[0, 0]))
+    return my_sum / n
 
 # forward propagation function
 def ForwardPropagation(X, weight_list):
-    h_list = list()
-    h_list.append(X)# is it the correct way to append a numpy array into a list? or use np.copy(X)
-    h_vec = X[np.newaxis]
-    for i in range(len(weight_list)):
-        a_vec = np.matmul(h_vec, weight_list[i])
-        if(i == len(weight_list)):
-            h_list.append(a_vec)# is it the correct way to append a numpy array into a list?
+    h_list = [X[np.newaxis].T, None, None]
+    for i in range(1, 3):
+        if(i == 2): # last layer gets identity
+            h_list[i] = np.matmul(weight_list[i].T, h_list[i - 1])
         else:
-            h_vec = 1/(1+np.exp(-a_vec))
-            h_list.append(h_vec)# is it the correct way to append a numpy array into a list?
-
+            h_list[i] = 1 / (1 + np.exp(np.matmul(weight_list[i].T, h_list[i - 1])))
     return h_list
 
 # back progration function
 def Back_Propagation(h_list, w_list, y_tilde):
-    grad_w_list = list()
+    grad_w_list = [None, None, None]
     for i in range(2, 0, -1):
         if(i == 2):
-            grad_a = -1 * y_tilde / (1 + np.exp(y_tilde * h_list[i]))
+            grad_a = -1 * y_tilde / (1 + np.exp(np.matmul(y_tilde, h_list[i])))
+            grad_a = grad_a[np.newaxis]
         else:
-            grad_h = np.matmul(grad_a, w_list[i].T)
-
+            grad_h = np.matmul(w_list[i + 1], grad_a)
             grad_a = grad_h * h_list[i] * (1 - h_list[i])
-        
-        grad_w_list.append(np.matmul(h_list[i - 1][np.newaxis].T, grad_a))
+        grad_w_list[i] = np.matmul(grad_a, h_list[i - 1].T).T
 
     return grad_w_list
 
@@ -116,6 +120,7 @@ def Parse(fname):
         if(std == 0):
             print("col " + str(col) + " has an std of 0")
         temp_ar[:, col] = stats.zscore(temp_ar[:, col])
+    np.random.shuffle(temp_ar)
     return temp_ar
 
 if len(sys.argv) < 4:
@@ -127,9 +132,10 @@ seed must be an int
     print(help_str)
     exit(0)
 
-step_size = int(sys.argv[1])
-n_hidden_units = int(sys.argv[2])
-seed = int(sys.argv[3])
+max_epochs = int(sys.argv[1])
+step_size = float(sys.argv[2])
+n_hidden_units = int(sys.argv[3])
+seed = int(sys.argv[4])
 np.random.seed(seed)
 temp_ar = Parse("spam.data")
 
@@ -152,4 +158,9 @@ X_mat = X[np.where(is_train)[0]]
 y_vec = y[np.where(is_train)[0]]
 
 # NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
-V_mat, w_vec = NNetOneSplit(X_mat, y_vec, 10, 0.1, 10, is_subtrain)
+mll_subtrain, mll_validation, V_mat, w_vec = NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
+
+plt.plot(mll_subtrain, label='subtrain')
+plt.plot(mll_validation, label='validation')
+plt.legend()
+plt.savefig("logistic_loss.png")

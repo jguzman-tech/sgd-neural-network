@@ -1,5 +1,6 @@
 # This Python file uses the following encoding: iso-8859-1
 
+import pdb
 import os, sys
 import numpy as np
 import sklearn
@@ -59,6 +60,7 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
             # update the theta for each weight
             for i in range(len(weight_list)):
                 weight_list[i] = weight_list[i] - step_size * grad_w_list[ 1 - i]
+            print(weight_list)
             weight_list_X.append(weight_list)
         
         ## compute the logistic loss for subtraihttps://forum.handsontable.com/t/adding-dictionary-map-array-as-data/4199/3n and validaiton
@@ -94,8 +96,8 @@ def Back_Propagation(h_list, w_list, y_tilde):
             grad_a = -1 * y_tilde / (1 + np.exp(y_tilde * h_list[i]))
         else:
             grad_h = np.matmul(grad_a, w_list[i].T)
+
             grad_a = grad_h * h_list[i] * (1 - h_list[i])
-        
         
         grad_w_list.append(np.matmul(h_list[i - 1][np.newaxis].T, grad_a))
 

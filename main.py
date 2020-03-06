@@ -60,7 +60,7 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
 
         loss_values['subtrain'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_subtrain, y_tilde_subtrain))
         loss_values['validation'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_validation, y_tilde_validation))
-    return loss_values, mll_validation, V_mat, w_vec
+    return loss_values, V_mat, w_vec
 
 def MeanLogisticLoss(theta1, theta2, X, y_tilde):
     my_sum = 0.0

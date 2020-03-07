@@ -1,6 +1,7 @@
 # This Python file uses the following encoding: iso-8859-1
 
-import pdb
+import argparse
+import pdb # use pdb.set_trace() to set a "break point" when debugging
 import os, sys
 import numpy as np
 import sklearn
@@ -57,7 +58,6 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     weight_list.append(w_vec)
     
     for epoch in range(max_epochs):
-        np.random.permutation(X_subtrain) # scramble the order for each epoch
         for row in range(X_subtrain.shape[0]):
             observation = X_subtrain[row]
             h_list = ForwardPropagation(observation, weight_list)
@@ -66,16 +66,26 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
             for i in range(1, 3):
                 weight_list[i] = weight_list[i] - step_size * grad_w_list[i]
         loss_values['subtrain'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_subtrain, y_tilde_subtrain))
-        loss_values['validation'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_validation, y_tilde_validation))
+        if(X_validation.shape[0] > 0):
+            loss_values['validation'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_validation, y_tilde_validation))
     return loss_values, V_mat, w_vec
 
 def MeanLogisticLoss(theta1, theta2, X, y_tilde):
-    # y_tilde[y_tilde == 1] = True
-    # y_tilde[y_tilde == 0] = False 
-    my_sum = 0.0
-    n = X.shape[0]
-    y_hat = np.matmul(1 / (1 - np.exp(-1 * np.matmul(X, theta1))), theta2)
-    return log_loss(y_tilde, y_hat)
+    if(custom):
+        # if the custom global variable is set, we use our custom MLL function, otherwise we use the library version
+        # this was necessary because despite using what we believe is the correct formula we kept getting
+        # overflow in our float calculations, we are even using np.float128 (128-bit) floats
+        # we used the library version for creating our graphs
+        my_sum = 0.0
+        n = X.shape[0]
+        for row in range(n):
+            temp = 1 / (1 + np.exp(-1 * np.matmul(X[row][np.newaxis], theta1)))
+            y_hat = np.matmul(temp, theta2)[0, 0]
+            my_sum += np.log(1 + np.exp(-1 * y_tilde[row, 0] * y_hat)) / n
+        return my_sum
+    else:
+        y_hat = np.matmul(1 / (1 + np.exp(-1 * np.matmul(X, theta1))), theta2)
+        return log_loss(y_tilde, y_hat)
 
 # forward propagation function
 def ForwardPropagation(X, weight_list):
@@ -116,58 +126,77 @@ def Parse(fname):
     np.random.shuffle(temp_ar)
     return temp_ar
 
-if len(sys.argv) < 4:
-    help_str = """Execution example: python3 main.py <No.of folds k> <No. of Nearest neighbors> <seed>
-Folds must be a float
-NN must be an int
-seed must be an int
-"""
-    print(help_str)
-    exit(0)
+if __name__ == "__main__":
 
-max_epochs = int(sys.argv[1])
-step_size = float(sys.argv[2])
-n_hidden_units = int(sys.argv[3])
-seed = int(sys.argv[4])
-np.random.seed(seed)
-temp_ar = Parse("spam.data")
+    parser = argparse.ArgumentParser(description='Use the SGD algorithm on the spam.data set')
+    parser.add_argument('max_epochs', type=int,
+                        help='The maximum number of epochs')
+    parser.add_argument('step_size', type=float,
+                        help='The scaling factor used for adjusting weights')
+    parser.add_argument('n_hidden_units', type=int,
+                        help='The number of hidden parameters in our hidden layer')
+    parser.add_argument('seed', type=int,
+                        help='The seed used for our random number generator')
+    parser.add_argument('--use-custom-ll', dest='custom', action='store_true',
+                        help='Set this flag if you want to calculate using the LL function we coded.' +
+                        'We used the library version to prevent overflow.')
+    args = parser.parse_args()
 
-X = temp_ar[:, 0:-1] # m x n
-X = X.astype(float)
-y = np.array([temp_ar[:, -1]]).T 
-y = y.astype(int)
-num_row = X.shape[0]
+    max_epochs = args.max_epochs
+    step_size = args.step_size
+    n_hidden_units = args.n_hidden_units
+    seed = args.seed
+    custom = args.custom
 
-#Next create a variable is.train (logical vector with size equal to the number of observations in the whole data set). 
-is_train = np.random.randint(0, 5, X.shape[0]) # 80% train, 20% test (from whole dataset)
-is_train = (is_train < 4) # convert to boolean
+    np.random.seed(seed)
+    temp_ar = Parse("spam.data")
 
-#Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set).
-is_subtrain = np.random.randint(0, 5, is_train[is_train == True].shape[0]) # 60% subtrain, 40% validation (from training set)
-is_subtrain = (is_subtrain < 3) # convert to boolean
+    X = temp_ar[:, 0:-1] # m x n
+    X = X.astype(float)
+    y = np.array([temp_ar[:, -1]]).T 
+    y = y.astype(int)
+    num_row = X.shape[0]
 
-# get training set
-X_mat = X[np.where(is_train)[0]]
-y_vec = y[np.where(is_train)[0]]
+    #Next create a variable is.train (logical vector with size equal to the number of observations in the whole data set). 
+    is_train = np.random.randint(0, 5, X.shape[0]) # 80% train, 20% test (from whole dataset)
+    is_train = (is_train < 4) # convert to boolean
 
-# NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
-loss_values, V_mat, w_vec = NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
-mll_subtrain = loss_values['subtrain']
-mll_validation = loss_values['validation']
-#plotting logistic loss function
-plt.plot(mll_subtrain, label='subtrain', color='blue')
-plt.plot(mll_validation, label='validation', color='red')
-best_epochs = mll_validation.index(min(mll_validation))
-plt.scatter(mll_subtrain.index(min(mll_subtrain)), min(mll_subtrain), marker='o', edgecolors='blue',
-            s=160, facecolor='none', linewidth=3, label='subtrain minimum')
-plt.scatter(best_epochs, min(mll_validation), marker='o', edgecolors='r', s=160, facecolor='none',
-            linewidth=3, label='validation minimum')
-plt.legend()
-plt.tight_layout()
-plt.xlabel('epoch #')
-plt.ylabel('Mean Logistic Loss')
-info = f"epochs_{max_epochs}_step_{step_size}_units_{n_hidden_units}_seed_{seed}"
-fname = f"{info}_logistic_loss.png"
-plt.savefig(fname)
+    #Next create a variable is.subtrain (logical vector with size equal to the number of observations in the train set).
+    is_subtrain = np.random.randint(0, 5, is_train[is_train == True].shape[0]) # 60% subtrain, 40% validation (from training set)
+    is_subtrain = (is_subtrain < 3) # convert to boolean
 
-print(f"wrote:\n{fname}")
+    # get training set
+    X_mat = X[np.where(is_train)[0]]
+    y_vec = y[np.where(is_train)[0]]
+
+    # NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
+    loss_values, V_mat, w_vec = NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
+    mll_subtrain = loss_values['subtrain']
+    mll_validation = loss_values['validation']
+    #plotting logistic loss function
+    plt.plot(mll_subtrain, label='subtrain', color='blue')
+    plt.plot(mll_validation, label='validation', color='red')
+    best_epochs = mll_validation.index(min(mll_validation))
+    plt.scatter(mll_subtrain.index(min(mll_subtrain)), min(mll_subtrain), marker='o', edgecolors='blue',
+                s=160, facecolor='none', linewidth=3, label=f'subtrain min (epoch #{mll_subtrain.index(min(mll_subtrain))})')
+    plt.scatter(best_epochs, min(mll_validation), marker='o', edgecolors='r', s=160, facecolor='none',
+                linewidth=3, label=f'validation min (epoch #{best_epochs})')
+    plt.legend()
+    plt.tight_layout()
+    plt.xlabel('epoch #')
+    plt.ylabel('Mean Logistic Loss')
+    info = f"epochs_{max_epochs}_step_{step_size}_units_{n_hidden_units}_seed_{seed}"
+    fname = f"{info}_logistic_loss.png"
+    plt.savefig(fname)
+
+    print(f"wrote:\n{fname}")
+
+    # call NNetOneSplit with max_epochs = best_epochs, with entire dataset
+    is_subtrain = np.zeros(X.shape[0])
+    is_subtrain[is_subtrain == 0] = True # all true
+    
+    loss_values, V_mat, w_vec = NNetOneSplit(X, y, best_epochs, step_size, n_hidden_units, is_subtrain)
+    mll_subtrain = loss_values['subtrain']
+    mll_validation = loss_values['validation']
+
+    

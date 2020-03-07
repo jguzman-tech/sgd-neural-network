@@ -147,7 +147,7 @@ y_vec = y[np.where(is_train)[0]]
 loss_values, V_mat, w_vec = NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrain)
 mll_subtrain = loss_values['subtrain']
 mll_validation = loss_values['validation']
-
+#plotting logistic loss function
 plt.plot(mll_subtrain, label='subtrain', color='blue')
 plt.plot(mll_validation, label='validation', color='red')
 optimal_epoch = mll_validation.index(min(mll_validation))

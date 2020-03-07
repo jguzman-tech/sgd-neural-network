@@ -55,23 +55,14 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     weight_list.append(w_vec)
     
     for epoch in range(max_epochs):
-        all_grad_w_list = list()
-        # np.random.permutation(X_subtrain)
+        np.random.permutation(X_subtrain)
         for row in range(X_subtrain.shape[0]):
             observation = X_subtrain[row]
             h_list = ForwardPropagation(observation, weight_list)
             grad_w_list = BackPropagation(h_list, weight_list, y_tilde_subtrain[row])
-            all_grad_w_list.append(np.copy(grad_w_list))
-            # # update weight
-            # for i in range(1, 3):
-            #     weight_list[i] = np.copy(weight_list[i] - step_size * grad_w_list[i])
-        # we calculated the gradient for each point now we update our parameters
-        for grad_w_list in all_grad_w_list:
-            for j in range(1, 3):
-                pdb.set_trace()
-                weight_list[j] += - step_size * grad_w_list[j]
-        
-
+            # update weight
+            for i in range(1, 3):
+                weight_list[i] = weight_list[i] - step_size * grad_w_list[i]
         loss_values['subtrain'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_subtrain, y_tilde_subtrain))
         loss_values['validation'].append(MeanLogisticLoss(weight_list[1], weight_list[2], X_validation, y_tilde_validation))
     return loss_values, V_mat, w_vec

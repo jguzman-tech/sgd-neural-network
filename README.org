@@ -1,5 +1,8 @@
 * NNetOneSplit
 Python3 version 3.6.1 or greater is REQUIRED
+
+Our NNetOneSplit function is located at:
+https://github.com/jguzman-tech/sgd-neural-network/blob/master/main.py
 ** 1. Environment setup
 These steps assume a linux system.
 *** 1.1. First clone the repo 

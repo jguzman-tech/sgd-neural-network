@@ -6,7 +6,7 @@ https://github.com/jguzman-tech/sgd-neural-network/blob/master/main.py
 ** 1. Environment setup
 These steps assume a linux system.
 *** 1.1. First clone the repo 
-git clone https://github.com/sambashiva-sk2292/KFoldCV/
+git clone https://github.com/jguzman-tech/sgd-neural-network.git
 *** 1.2. Create an arbitrary directory
 #+BEGIN_SRC
 mkdir ./.venv

@@ -189,9 +189,9 @@ if __name__ == "__main__":
     fname = f"{info}_logistic_loss.png"
     plt.savefig(fname)
 
-    print(f"wrote:\n{fname}")
+    print(f"wrote:\n{fname}\n")
 
-    # call NNetOneSplit with max_epochs = best_epochs, with entire dataset
+    # call NNetOneSplit with max_epochs = best_epochs, with entire dataset, I assume we graph too
     is_subtrain = np.zeros(X.shape[0])
     is_subtrain[is_subtrain == 0] = True # all true
     
@@ -199,4 +199,25 @@ if __name__ == "__main__":
     mll_subtrain = loss_values['subtrain']
     mll_validation = loss_values['validation']
 
-    
+    # get test set
+    X_test = X[np.where(is_train == False)[0]]
+    y_test = y[np.where(is_train == False)[0]]
+
+    # use the V_mat and w_vec to get our final y_hat
+    # y_hat = sigmoid(X_test * V_mat) * w_vec right?
+    temp = 1 / (1 + np.exp(-1 * np.matmul(X_test, V_mat)))
+    y_hat = np.matmul(temp, w_vec)
+    y_hat[y_hat >= 0] = 1
+    y_hat[y_hat < 0] = 0
+
+    one_count = y[y == 0].shape
+    zero_count = y[y == 1].shape
+    baseline_y_hat = np.zeros(y_test.shape)
+    if(one_count > zero_count):
+        baseline_y_hat[baseline_y_hat == 0] = 1
+
+    # calculate zero-one loss for both y_hat and baseline_y_hat with respect to test set
+    sgd_error = 100 * (np.mean(y_hat != y_test))
+    baseline_error = 100 * (np.mean(baseline_y_hat != y_test))
+    print(f"test error % using SGD: {sgd_error}")
+    print(f"test error % using baseline: {baseline_error}")

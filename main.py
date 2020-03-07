@@ -16,7 +16,9 @@ import os.path
 import copy
 import warnings
 import statistics
-warnings.simplefilter('error') # treat warnings as errors
+from sklearn.metrics import log_loss # logistic loss
+from scipy.special import expit  # expit is sigmoid
+# warnings.simplefilter('error') # treat warnings as errors
 
 from matplotlib.pyplot import figure
 figure(num=None, figsize=(30, 8), dpi=80, facecolor='w', edgecolor='k')
@@ -55,7 +57,7 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     weight_list.append(w_vec)
     
     for epoch in range(max_epochs):
-        np.random.permutation(X_subtrain)
+        np.random.permutation(X_subtrain) # scramble the order for each epoch
         for row in range(X_subtrain.shape[0]):
             observation = X_subtrain[row]
             h_list = ForwardPropagation(observation, weight_list)
@@ -68,11 +70,12 @@ def NNetOneSplit(X_mat, y_vec, max_epochs, step_size, n_hidden_units, is_subtrai
     return loss_values, V_mat, w_vec
 
 def MeanLogisticLoss(theta1, theta2, X, y_tilde):
+    # y_tilde[y_tilde == 1] = True
+    # y_tilde[y_tilde == 0] = False 
     my_sum = 0.0
     n = X.shape[0]
-    for row in range(n):
-        my_sum += np.log(1 + np.exp(-1 * y_tilde[row, 0] * np.matmul(np.matmul(X[row][np.newaxis], theta1), theta2)[0, 0])) / n
-    return my_sum
+    y_hat = np.matmul(1 / (1 - np.exp(-1 * np.matmul(X, theta1))), theta2)
+    return log_loss(y_tilde, y_hat)
 
 # forward propagation function
 def ForwardPropagation(X, weight_list):

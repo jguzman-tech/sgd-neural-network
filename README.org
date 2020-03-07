@@ -1,4 +1,5 @@
 * NNetOneSplit
+Python3 version 3.6.1 or greater is REQUIRED
 ** 1. Environment setup
 These steps assume a linux system.
 *** 1.1. First clone the repo 
@@ -39,15 +40,32 @@ This will be saved on all future shells sessions for your current user.
 pip3 install -r ./requirements.txt
 #+END_SRC
 ** 2. Execution
+To see our help message execute:
+python3 main.py -h
 #+BEGIN_SRC
-python3 main.py <num-folds> <max-neighbors> <seed>
+prompt$ python3 main.py -h
+usage: main.py [-h] [--use-custom-ll] max_epochs step_size n_hidden_units seed
+
+Use the SGD algorithm on the spam.data set
+
+positional arguments:
+  max_epochs       The maximum number of epochs
+  step_size        The scaling factor used for adjusting weights
+  n_hidden_units   The number of hidden parameters in our hidden layer
+  seed             The seed used for our random number generator
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --use-custom-ll  Set this flag if you want to calculate using the LL
+                   function we coded.We used the library version to prevent
+                   overflow.
 #+END_SRC
-num-folds must be a float
-max-neighbors must be an int
-seed must be an int
 ** 3. Reproduce our results
 #+BEGIN_SRC
-python3 main.py 5 20 3
+python3 main.py 500 0.05 10 4
 #+END_SRC
-Our 5 figures included in the report will be generated in the current working
-directory.
+The resultant figure will be:
+epochs_500_step_0.05_units_10_seed_4_logistic_loss.png
+
+As you can see the filename includes all of the arguments so you can easily
+identify them.
